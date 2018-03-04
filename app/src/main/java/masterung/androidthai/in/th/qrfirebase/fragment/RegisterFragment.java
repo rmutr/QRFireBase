@@ -1,10 +1,12 @@
 package masterung.androidthai.in.th.qrfirebase.fragment;
 
+import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -18,6 +20,8 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.UserProfileChangeRequest;
 
 import masterung.androidthai.in.th.qrfirebase.MainActivity;
 import masterung.androidthai.in.th.qrfirebase.R;
@@ -31,6 +35,7 @@ public class RegisterFragment extends Fragment{
 
 //    Explicit
     private String nameString, emailString, passwordString;
+    private ProgressDialog progressDialog;
 
 
     @Override
@@ -58,6 +63,11 @@ public class RegisterFragment extends Fragment{
 
     private void saveController() {
 
+        progressDialog = new ProgressDialog(getActivity());
+        progressDialog.setTitle("Save Value To Firebase");
+        progressDialog.setMessage("Please Wait Few Minus...");
+        progressDialog.show();
+
 //        Get Value From EditText
         EditText nameEditText = getView().findViewById(R.id.edtName);
         EditText emailEditText = getView().findViewById(R.id.edtEmail);
@@ -71,8 +81,9 @@ public class RegisterFragment extends Fragment{
         if (nameString.isEmpty() || emailString.isEmpty() || passwordString.isEmpty()) {
 //            Have Space
             MainAlert mainAlert = new MainAlert(getActivity());
-            mainAlert.normalDialog("Have Space",
-                    "Please Fill All Every Blank");
+            mainAlert.normalDialog(getString(R.string.title_have_space),
+                    getString(R.string.message_have_space));
+            progressDialog.dismiss();
 
         } else {
 //            No Space
@@ -85,13 +96,25 @@ public class RegisterFragment extends Fragment{
 
     private void uploadToFirebase() {
 
-        FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
+        final FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
         firebaseAuth.createUserWithEmailAndPassword(emailString, passwordString)
                 .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
-//                            Success Regis
+//                            Success Register
+
+                            FirebaseUser firebaseUser = firebaseAuth.getCurrentUser();
+                            UserProfileChangeRequest userProfileChangeRequest = new UserProfileChangeRequest
+                                    .Builder().setDisplayName(nameString).build();
+                            firebaseUser.updateProfile(userProfileChangeRequest)
+                                    .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                        @Override
+                                        public void onComplete(@NonNull Task<Void> task) {
+                                            Log.d("4MarchV1", "Complete DisplayName");
+                                        }
+                                    });
+
                             Toast.makeText(getActivity(), "Welcome Register Success",
                                     Toast.LENGTH_SHORT).show();
                             getActivity().getSupportFragmentManager().popBackStack();
@@ -102,7 +125,8 @@ public class RegisterFragment extends Fragment{
                             MainAlert mainAlert = new MainAlert(getActivity());
                             mainAlert.normalDialog("Register False", resultString);
                         }
-                    }
+                        progressDialog.dismiss();
+                    }   // onComplete
                 });
 
     }
