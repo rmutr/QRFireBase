@@ -84,7 +84,7 @@ public class QRcodeFragment extends Fragment {
                             ProductModel productModel = new ProductModel(dateTimeString, resultString);
 
 //                            Getter Model and Update value to Firebase
-                            databaseReference.child("Product").child(dateTimeString).setValue(productModel);
+                            databaseReference.child("Product").child("Px" + dateTimeString).setValue(productModel);
 
                             zXingScannerView.removeAllViews();
                             zXingScannerView.stopCameraPreview();
